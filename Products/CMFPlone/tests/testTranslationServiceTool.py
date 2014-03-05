@@ -1,6 +1,4 @@
-#
 # Test toLocalizedTime script and TranslationServiceTool.
-#
 
 from Products.CMFPlone.tests import PloneTestCase
 from Products.CMFCore.utils import getToolByName
@@ -14,23 +12,24 @@ class TestUTranslate(PloneTestCase.PloneTestCase):
     def testUTranslate(self):
         # Test Unicode value
         value = self.tool.translate(u'foo', 'domain')
-        self.assertEquals(value, u'foo')
+        self.assertEqual(value, u'foo')
 
         # Test ascii value
         value = self.tool.translate('foo', 'domain')
-        self.assertEquals(value, u'foo')
+        self.assertEqual(value, u'foo')
 
         # Test empty string
         value = self.tool.translate('', 'domain')
-        self.assertEquals(value, u'')
+        self.assertEqual(value, u'')
 
         # Test empty domain
         value = self.tool.translate('foo', 'domain')
-        self.assertEquals(value, u'foo')
+        self.assertEqual(value, u'foo')
 
         # Test default is None
         value = self.tool.translate('foo', 'domain', default=None)
-        self.assertEquals(value, u'foo')
+        self.assertEqual(value, u'foo')
+
 
 class TestTranslationServiceTool(PloneTestCase.PloneTestCase):
 
@@ -44,7 +43,7 @@ class TestTranslationServiceTool(PloneTestCase.PloneTestCase):
                                          context=self.portal)
         # TranslationServiceTool falls back to time formats in site properties
         # because PTS isn't installed
-        self.assertEquals(value, 'Mar 09, 1997 01:45 PM')
+        self.assertEqual(value, 'Mar 09, 1997 01:45 PM')
 
     def testLocalized_time_only_none(self):
         value = self.tool.ulocalized_time('Mar 9, 1997 1:45pm',
@@ -53,7 +52,7 @@ class TestTranslationServiceTool(PloneTestCase.PloneTestCase):
                                          context=self.portal)
         # TranslationServiceTool falls back to time formats in site properties
         # because PTS isn't installed
-        self.assertEquals(value, 'Mar 09, 1997 01:45 PM')
+        self.assertEqual(value, 'Mar 09, 1997 01:45 PM')
 
     def testLocalized_time_only(self):
         value = self.tool.ulocalized_time('Mar 9, 1997 1:45pm',
@@ -62,18 +61,10 @@ class TestTranslationServiceTool(PloneTestCase.PloneTestCase):
                                          context=self.portal)
         # TranslationServiceTool falls back to time formats in site properties
         # because PTS isn't installed
-        self.assertEquals(value, '01:45 PM')
+        self.assertEqual(value, '01:45 PM')
 
     def test_ulocalized_time_fetch_error(self):
         # http://dev.plone.org/plone/ticket/4251
         error = "(Missing.Value,), {}"
         value = self.tool.ulocalized_time(error)
-        self.failUnlessEqual(value, None)
-
-
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(TestUTranslate))
-    suite.addTest(makeSuite(TestTranslationServiceTool))
-    return suite
+        self.assertEqual(value, None)

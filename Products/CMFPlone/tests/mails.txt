@@ -3,17 +3,14 @@ Mail related functional tests
 
 Some initial setup:
 
-  # BBB Zope 2.12
-  >>> try:
-  ...     from Testing.testbrowser import Browser
-  ... except ImportError:
-  ...     from Products.Five.testbrowser import Browser
-  >>> browser = Browser()
+  >>> from plone.testing.z2 import Browser
+  >>> browser = Browser(app)
 
 We need to fake a valid mail setup:
 
   >>> portal.email_from_address = "mail@plone.test"
   >>> mailhost = self.portal.MailHost
+  >>> import transaction; transaction.commit()
 
 Contact form
 ------------

@@ -1,19 +1,17 @@
-#
 # Generic user folder tests. Every user folder implementation
 # must pass these.
-#
 
+from AccessControl import Unauthorized
 from Testing import ZopeTestCase
+from plone.app.testing import TEST_USER_ID
+from plone.app.testing import TEST_USER_NAME
+from plone.app.testing import TEST_USER_PASSWORD
 from Products.CMFPlone.tests import PloneTestCase
 from Products.CMFCore.tests.base.testcase import WarningInterceptor
-
 import base64
-from AccessControl import Unauthorized
 
-default_user     = PloneTestCase.default_user
-default_password = PloneTestCase.default_password
-user_perms       = ZopeTestCase.standard_permissions
-user_role        = 'Member'
+user_perms = ZopeTestCase.standard_permissions
+user_role = 'Member'
 
 
 class TestUserFolder(PloneTestCase.PloneTestCase, WarningInterceptor):
@@ -21,7 +19,9 @@ class TestUserFolder(PloneTestCase.PloneTestCase, WarningInterceptor):
     def afterSetUp(self):
         self.logout()
         self.uf = self.portal.acl_users
-        self.basic = 'Basic %s' % base64.encodestring('%s:%s' % (default_user, default_password))
+        self.basic = \
+            'Basic %s' % base64.encodestring(
+                            '%s:%s' % (TEST_USER_NAME, TEST_USER_PASSWORD))
         # Set up a published object accessible to the default user
         self.folder.addDTMLMethod('doc', file='')
         self.folder.doc.manage_permission('View', [user_role], acquire=0)
@@ -37,67 +37,68 @@ class TestUserFolder(PloneTestCase.PloneTestCase, WarningInterceptor):
 
         # Nuke Administators and Reviewers groups added in 2.1a2 migrations
         # (and any other migrated-in groups) to avoid test confusion
-        self.portal.portal_groups.removeGroups(self.portal.portal_groups.listGroupIds())
+        self.portal.portal_groups.removeGroups(
+            self.portal.portal_groups.listGroupIds())
 
     def testGetUser(self):
-        self.failIfEqual(self.uf.getUser(default_user), None)
+        self.assertNotEqual(self.uf.getUser(TEST_USER_NAME), None)
 
     def testGetBadUser(self):
         self.assertEqual(self.uf.getUser('user2'), None)
 
     def testGetUserById(self):
-        self.failIfEqual(self.uf.getUserById(default_user), None)
+        self.assertNotEqual(self.uf.getUserById(TEST_USER_ID), None)
 
     def testGetBadUserById(self):
         self.assertEqual(self.uf.getUserById('user2'), None)
 
     def testGetUsers(self):
         users = self.uf.getUsers()
-        self.failUnless(users)
-        self.assertEqual(users[0].getUserName(), default_user)
+        self.assertTrue(users)
+        self.assertEqual(users[0].getUserName(), TEST_USER_NAME)
 
     def testGetUserNames(self):
         names = self.uf.getUserNames()
-        self.failUnless(names)
-        self.assertEqual(names[0], default_user)
+        self.assertTrue(names)
+        self.assertEqual(names[0], TEST_USER_NAME)
 
     def testGetRoles(self):
-        user = self.uf.getUser(default_user)
-        self.failUnless(user_role in user.getRoles())
+        user = self.uf.getUser(TEST_USER_NAME)
+        self.assertTrue(user_role in user.getRoles())
 
     def testGetRolesInContext(self):
-        user = self.uf.getUser(default_user)
-        self.folder.manage_addLocalRoles(default_user, ['Owner'])
+        user = self.uf.getUser(TEST_USER_NAME)
+        self.folder.manage_addLocalRoles(TEST_USER_ID, ['Owner'])
         roles = user.getRolesInContext(self.folder)
-        self.failUnless(user_role in roles)
-        self.failUnless('Owner' in roles)
+        self.assertTrue(user_role in roles)
+        self.assertTrue('Owner' in roles)
 
     def testHasRole(self):
-        user = self.uf.getUser(default_user)
-        self.failUnless(user.has_role(user_role, self.folder))
+        user = self.uf.getUser(TEST_USER_NAME)
+        self.assertTrue(user.has_role(user_role, self.folder))
 
     def testHasLocalRole(self):
-        user = self.uf.getUser(default_user)
-        self.folder.manage_addLocalRoles(default_user, ['Owner'])
-        self.failUnless(user.has_role('Owner', self.folder))
+        user = self.uf.getUser(TEST_USER_NAME)
+        self.folder.manage_addLocalRoles(TEST_USER_ID, ['Owner'])
+        self.assertTrue(user.has_role('Owner', self.folder))
 
     def testHasPermission(self):
-        user = self.uf.getUser(default_user)
-        self.failUnless(user.has_permission('View', self.folder))
+        user = self.uf.getUser(TEST_USER_NAME)
+        self.assertTrue(user.has_permission('View', self.folder))
         self.folder.manage_role(user_role, ['Add Folders'])
-        self.failUnless(user.has_permission('Add Folders', self.folder))
+        self.assertTrue(user.has_permission('Add Folders', self.folder))
 
     def testHasLocalRolePermission(self):
-        user = self.uf.getUser(default_user)
+        user = self.uf.getUser(TEST_USER_NAME)
         self.folder.manage_role('Owner', ['Add Folders'])
-        self.folder.manage_addLocalRoles(default_user, ['Owner'])
-        self.failUnless(user.has_permission('Add Folders', self.folder))
+        self.folder.manage_addLocalRoles(TEST_USER_ID, ['Owner'])
+        self.assertTrue(user.has_permission('Add Folders', self.folder))
 
     def testValidate(self):
         self.app.REQUEST._auth = self.basic
         user = self.uf.validate(self.app.REQUEST, self.basic, [user_role])
-        self.failIfEqual(user, None)
-        self.assertEqual(user.getUserName(), default_user)
+        self.assertNotEqual(user, None)
+        self.assertEqual(user.getUserName(), TEST_USER_NAME)
 
     def testNotValidateWithoutAuth(self):
         self.app.REQUEST._auth = ''
@@ -108,7 +109,7 @@ class TestUserFolder(PloneTestCase.PloneTestCase, WarningInterceptor):
         self.app.REQUEST._auth = self.basic
         # Roles will be determined by looking at 'doc' itself
         user = self.uf.validate(self.app.REQUEST, self.basic)
-        self.assertEqual(user.getUserName(), default_user)
+        self.assertEqual(user.getUserName(), TEST_USER_NAME)
 
     def testNotValidateWithEmptyRoles(self):
         self.app.REQUEST._auth = self.basic
@@ -132,10 +133,3 @@ class TestUserFolder(PloneTestCase.PloneTestCase, WarningInterceptor):
 
     def beforeTearDown(self):
         self._free_warning_output()
-
-
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(TestUserFolder))
-    return suite

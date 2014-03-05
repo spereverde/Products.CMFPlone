@@ -69,10 +69,39 @@
 
   <browser:page
       for="*"
-      name="sitemap_view"
+      name="sitemap"
       class=".sitemap.SitemapView"
+      template="templates/sitemap.pt"
       permission="zope.Public"
       allowed_interface=".interfaces.ISitemapView"
+      />
+
+  <browser:page
+      for="*"
+      name="main_template"
+      class=".main_template.MainTemplate"
+      permission="zope.Public"
+      />
+
+  <browser:page
+      for="*"
+      name="global_statusmessage"
+      class=".global_statusmessage.GlobalStatusMessage"
+      permission="zope.Public"
+      />
+
+  <browser:page
+      for="plone.app.layout.navigation.interfaces.INavigationRoot"
+      name="accessibility-info"
+      template="templates/accessibility-info.pt"
+      permission="zope.Public"
+      />
+
+  <browser:page
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      name="author-feedback-template"
+      template="templates/author_feedback_template.pt"
+      permission="zope.Public"
       />
 
    <adapter for="*
@@ -90,5 +119,7 @@
       file="blank.html"
       name="blank.html"
       />
+
+  <include package=".syndication" />
 
 </configure>

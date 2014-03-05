@@ -1,8 +1,6 @@
-#
-# QuickInstallerTool tests
-#
-
 from Products.CMFPlone.tests import PloneTestCase
+from Products.CMFPlone import tests
+from zope.configuration import xmlconfig
 
 
 class TestQuickInstallerTool(PloneTestCase.PloneTestCase):
@@ -25,17 +23,28 @@ class TestQuickInstallerTool(PloneTestCase.PloneTestCase):
         # it should not show up as installable
         self.setRoles(('Manager',))
         self.qi.installProducts(['CMFPlacefulWorkflow', ])
-        self.failUnless('CMFPlacefulWorkflow' in self._installed())
-        self.failIf('CMFPlacefulWorkflow' in self._available())
+        self.assertTrue('CMFPlacefulWorkflow' in self._installed())
+        self.assertFalse('CMFPlacefulWorkflow' in self._available())
         self.qi.uninstallProducts(['CMFPlacefulWorkflow', ])
-        self.failUnless('CMFPlacefulWorkflow' in self._available())
-        self.failIf('CMFPlacefulWorkflow' in self._installed())
+        self.assertTrue('CMFPlacefulWorkflow' in self._available())
+        self.assertFalse('CMFPlacefulWorkflow' in self._installed())
 
     def testUpgradeProfilesNotShown(self):
-        self.failIf('plone.app.upgrade.v30' in self._available())
+        self.assertFalse('plone.app.upgrade.v30' in self._available())
 
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(TestQuickInstallerTool))
-    return suite
+    def testLatestUpgradeProfiles(self):
+        xmlconfig.file('test_upgrades1.zcml', package=tests, context=self.layer['configurationContext'])
+        latest = self.qi.getLatestUpgradeStep('Products.CMFPlone:testfixture')
+        self.assertTrue(latest == '3')
+
+    def testLatestUpgradeProfiles2(self):
+        # make sure strings don't break things
+        # note that pkg_resources interprets 1 as
+        # ''00000001', which is > 'banana'
+        xmlconfig.file('test_upgrades2.zcml', package=tests, context=self.layer['configurationContext'])
+        latest = self.qi.getLatestUpgradeStep('Products.CMFPlone:testfixture')
+        self.assertTrue(latest == '3')
+
+
+def dummy_handler():
+    pass

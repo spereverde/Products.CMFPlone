@@ -7,7 +7,7 @@ import zope.deferredimport
 zope.deferredimport.deprecated(
     "It has been moved to plone.app.layout.navigation.interfaces. "
     "This alias will be removed in Plone 5.0",
-    INavigationRoot = 'plone.app.layout.navigation.interfaces:INavigationRoot',
+    INavigationRoot='plone.app.layout.navigation.interfaces:INavigationRoot',
     )
 
 
@@ -180,6 +180,14 @@ class ISitemapView(Interface):
         """Create the site map data structure"""
 
 
+class IMainTemplate(Interface):
+    """Interface to the view that generated the main_template"""
+
+
+class IGlobalStatusMessage(Interface):
+    """Interface to the view that generated the main_template"""
+
+
 class IPlone(Interface):
     """ """
 
@@ -194,10 +202,15 @@ class IPlone(Interface):
     def uniqueItemIndex(pos=0):
         """Return an index iterator."""
 
-    def toLocalizedTime(time, long_format=None, time_only = None):
+    def toLocalizedTime(time, long_format=None, time_only=None):
         """ The time parameter must be either a string that is suitable for
             initializing a DateTime or a DateTime object. Returns a localized
             string.
+        """
+
+    def toLocalizedSize(size):
+        """ Convert an integer to a localized size string
+        3322 -> 3KB in english, 3Ko in french
         """
 
     def normalizeString(text):

@@ -2,7 +2,7 @@
 # plone.theme) take precedence over views assigned to layers from other
 # add-on products (a la plone.browserlayer).
 
-from Products.CMFPlone.tests import PloneTestCase
+from plone.app.testing.bbb import PloneTestCase
 from zope.publisher.browser import TestRequest
 
 from zope.event import notify
@@ -10,12 +10,13 @@ from zope.interface import Interface
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
 from zope.traversing.interfaces import BeforeTraverseEvent
 from plone.browserlayer.utils import register_layer, unregister_layer
-from plonetheme.sunburst.browser.interfaces import IThemeSpecific
+
 
 class IAdditiveLayer(Interface):
     pass
 
-class TestBrowserLayerPrecedence(PloneTestCase.FunctionalTestCase):
+
+class TestBrowserLayerPrecedence(PloneTestCase):
 
     def _get_request_interfaces(self):
         request = TestRequest()
@@ -28,18 +29,4 @@ class TestBrowserLayerPrecedence(PloneTestCase.FunctionalTestCase):
         iro = self._get_request_interfaces()
         unregister_layer('Plone.testlayer')
 
-        self.failUnless(iro.index(IAdditiveLayer) < iro.index(IDefaultBrowserLayer))
-
-    def testThemeSpecificLayerTakesHighestPrecedence(self):
-        register_layer(IAdditiveLayer, 'Plone.testlayer')
-        iro = self._get_request_interfaces()
-        unregister_layer('Plone.testlayer')
-
-        self.failUnless(iro.index(IThemeSpecific) < iro.index(IAdditiveLayer),
-            'Theme-specific browser layers should take precedence over other browser layers.')
-
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(TestBrowserLayerPrecedence))
-    return suite
+        self.assertTrue(iro.index(IAdditiveLayer) < iro.index(IDefaultBrowserLayer))

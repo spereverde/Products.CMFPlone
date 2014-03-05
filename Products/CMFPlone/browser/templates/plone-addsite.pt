@@ -13,6 +13,7 @@
   <title i18n:translate="">Create a Plone site</title>
 
   <link rel="stylesheet" type="text/css"
+        tal:attributes="href string:${context/absolute_url}/++resource++plone-admin-ui.css"
         href="/++resource++plone-admin-ui.css" />
 
   <script type="text/javascript">
@@ -26,7 +27,8 @@
 </head>
 <body>
 
-  <img src="/++resource++plone-logo.png" width="215" height="56" />
+  <img src="/++resource++plone-logo.png" width="215" height="56"
+    tal:attributes="src string:${context/absolute_url}/++resource++plone-logo.png" />
 
   <h1 i18n:translate="">Create a Plone site</h1>
 
@@ -90,15 +92,18 @@
 
         <div class="formHelp" />
 
-        <input type="checkbox" name="setup_content:boolean" />
+        <input type="checkbox" name="setup_content:boolean" checked="checked" />
 
         <span i18n:translate="">
             Should the default example content be added to the site?
         </span>
       </div>
+
       <tal:content tal:condition="not:advanced">
         <input type="hidden" name="setup_content:boolean" value="true" />
       </tal:content>
+
+
 
       <tal:baseprofile condition="python: len(base_profiles) > 1">
         <div class="field">
@@ -134,13 +139,13 @@
         </div>
       </tal:baseprofile>
 
-      <tal:extensionprofiles condition="extension_profiles">
-        <fieldset id="add-on-list">
-          <legend i18n:translate="">
+      <tal:extensionprofiles condition="python: extension_profiles">
+        <fieldset id="add-on-list" tal:omit-tag="python: not advanced">
+          <legend i18n:translate="" tal:condition="python: advanced">
             Add-ons
           </legend>
 
-          <div class="formHelp" i18n:translate="">
+          <div class="formHelp" i18n:translate="" tal:condition="python: advanced">
               Select any add-ons you want to activate immediately. You can
               also activate add-ons after the site has been created using the
               Add-ons control panel.
@@ -150,7 +155,7 @@
             <tal:addons tal:repeat="info extension_profiles">
               <tal:info tal:define="selected info/selected|nothing">
                 <tal:normal tal:condition="python: not selected or advanced">
-                  <dt>
+                  <dt tal:condition="python: advanced">
                     <input type="checkbox" name="extension_ids:list" value=""
                            tal:attributes="value info/id;
                                            id info/id;
@@ -161,7 +166,7 @@
                       profile title
                     </label>
                   </dt>
-                  <dd tal:content="info/description">
+                  <dd tal:content="info/description" tal:condition="python: advanced">
                     profile description
                   </dd>
                 </tal:normal>

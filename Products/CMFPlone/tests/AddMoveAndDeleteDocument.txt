@@ -3,28 +3,27 @@ Adding, Editing, Moving and Deleting a Document
 
 Does what the title says, really.  Plus some assertions.
 
-    # BBB Zope 2.12
-    >>> try:
-    ...     from Testing.testbrowser import Browser
-    ... except ImportError:
-    ...     from Products.Five.testbrowser import Browser
-    >>> browser = Browser()
+    >>> from plone.testing.z2 import Browser
+    >>> from plone.app.testing import TEST_USER_NAME
+    >>> from plone.app.testing import TEST_USER_PASSWORD
+    >>> browser = Browser(app)
     >>> browser.open('http://nohost/plone/login_form')
 
 First, we need to log in.
 
-    >>> browser.getControl('Login Name').value = 'test_user_1_'
-    >>> browser.getControl('Password').value = 'secret'
+    >>> browser.getControl('Login Name').value = TEST_USER_NAME
+    >>> browser.getControl('Password').value = TEST_USER_PASSWORD
     >>> browser.getControl('Log in').click()
 
 We need to allow multiple languages to see the result of our changes:
 
     >>> self.portal.portal_languages.supported_langs = ['de', 'en']
+    >>> import transaction; transaction.commit()
 
 Add Document
 ------------
 
-What we do next is we 
+What we do next is we
 
   - go to our home folder,
   - add a new page,
@@ -37,11 +36,7 @@ looks like because we're navigating the page with a JavaScript- less
 browser.
 
     >>> browser.open('http://nohost/plone/Members/test_user_1_')
-    >>> browser.getLink('Add new').click()
-    >>> 'Add new item' in browser.contents
-    True
-    >>> browser.getControl('Page').click()
-    >>> browser.getControl('Add').click()
+    >>> browser.getLink('Page').click()
     >>> #'Edit Page' in browser.contents # ouch, Plone has <span> around 'Page'
     >>> browser.url
     'http://nohost/plone/Members/test_user_1_/portal_factory/Document/.../edit'
@@ -92,8 +87,8 @@ If we click the Edit link twice and then Cancel, we end at the
 canonical view of the document:
 
     >>> browser.getLink('Edit').click()
-    >>> browser.getLink('Edit').click()    
-    >>> browser.getControl('Cancel').click() 
+    >>> browser.getLink('Edit').click()
+    >>> browser.getControl('Cancel').click()
     >>> browser.url
     'http://nohost/plone/Members/test_user_1_/my-page/view'
 
@@ -136,24 +131,14 @@ Cut and paste Document
 ----------------------
 
 We'll first cut our Document. Then we'll create folder where we paste
-the Document into.
+the Document into. First off, we'll cut our document:
 
-    >>> browser.getLink('Actions').click()
-
-First off, we'll cut our document:
-
-    >>> browser.getControl('Ons Bier').click()
-    >>> browser.getControl('Cut').click()
+    >>> browser.getLink('Cut').click()
 
 Before doing the actual paste, we create a folder to paste into.
 
-    >>> browser.getLink('Add new').click()
-    >>> 'Add new item' in browser.contents
-    True
-    >>> browser.getControl('Folder').click()
-    >>> browser.getControl('Add').click()
-    >>> #'Edit Folder' in browser.contents # empty <span> again
-    True
+    >>> browser.open('http://nohost/plone/Members/test_user_1_')
+    >>> browser.getLink('Folder').click()
     >>> browser.getControl('Title').value = 'My Folder'
     >>> browser.getControl('Save').click()
     >>> 'Changes saved.' in browser.contents
@@ -162,28 +147,81 @@ Before doing the actual paste, we create a folder to paste into.
 The Folder has been created, now we can paste the Document in our copy
 buffer here:
 
-    >>> browser.getLink('Actions').click()
-    >>> browser.getControl('Paste').click()
+    >>> browser.getLink('View').click()
+    >>> browser.getLink('Paste').click()
+    >>> browser.url
+    'http://nohost/plone/Members/test_user_1_/my-folder/'
     >>> 'Item(s) pasted.' in browser.contents
     True
+    >>> browser.getLink('View').click()
     >>> 'Ons Bier' in browser.contents
     True
 
 Delete Document
 ---------------
 
-Again, also deleting a Document without JavaScript involves visiting
-the ``folder_contents`` page and clicking a checkbox.
+Delete the document.
 
-    >>> browser.open('http://nohost/plone/Members/test_user_1_/my-folder/')
-    >>> browser.getLink('Actions').click()
-    >>> browser.url
-    'http://nohost/plone/Members/test_user_1_/my-folder/folder_contents'
-
-This is how we click the checkbox.  There's a nicer way to do this,
-I'm sure:
-
-    >>> browser.getControl('Ons Bier').click()
+    >>> browser.open('http://nohost/plone/Members/test_user_1_/my-folder/my-page')
+    >>> browser.getLink('Edit').click()
+    >>> browser.getControl('Cancel').click()
+    >>> browser.getLink('Delete').click()
     >>> browser.getControl('Delete').click()
-    >>> 'Item(s) deleted.' in browser.contents
+    >>> 'Ons Bier has been deleted.' in browser.contents
+    True
+
+Paste deleted document
+----------------------
+
+When the document has been moved or deleted by someone else in the time
+between cut and paste, the page should say so and not give a stacktrace.
+(https://dev.plone.org/ticket/13577)
+
+    >>> browser.open('http://nohost/plone/Members/test_user_1_')
+    >>> browser.getLink('Page').click()
+    >>> browser.getControl('Body Text').value = ''
+    >>> browser.getControl('Title').value = 'Op een dag'
+    >>> browser.getControl('Save').click()
+    >>> 'Op een dag' in browser.contents
+    True
+
+We go now to the document absolute url:
+
+    >>> browser.open('http://nohost/plone/Members/test_user_1_/op-een-dag')
+
+We'll first cut our Document.
+
+    >>> browser.getLink('Cut').click()
+
+Login another user:
+
+    >>> browser2 = Browser(app)
+    >>> browser2.open('http://nohost/plone/login_form')
+    >>> browser2.getControl('Login Name').value = TEST_USER_NAME
+    >>> browser2.getControl('Password').value = TEST_USER_PASSWORD
+    >>> browser2.getControl('Log in').click()
+
+Other user removes document:
+(It's good enough to log in as the same user on a different Browser,
+the main thing is that Plone's session is unable to remove the cut content
+from its clipboard.)
+
+    >>> browser2.open('http://nohost/plone/Members/test_user_1_/op-een-dag')
+    >>> browser2.getLink('Delete').click()
+    >>> browser2.getControl('Delete').click()
+    >>> 'Op een dag has been deleted.' in browser2.contents
+    True
+
+This should fail graciously, that is:
+- Not give a server error
+- Not give a traceback
+- Show a message that says what's wrong
+
+    >>> browser.open('http://nohost/plone/Members/test_user_1_/my-folder')
+    >>> browser.getLink('Paste').click()
+    >>> browser.url
+    'http://nohost/plone/Members/test_user_1_/my-folder'
+    >>> 'Traceback' not in browser.contents
+    True
+    >>> 'may have been moved or deleted after you copied' in browser.contents
     True

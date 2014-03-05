@@ -23,15 +23,15 @@ def initialize(context):
     from AccessControl import ModuleSecurityInfo
     from AccessControl import allow_module, allow_class
 
+    # protect OFS.ObjectManager
+    ModuleSecurityInfo('OFS.ObjectManager').setDefaultAccess(0)
+    ModuleSecurityInfo('OFS.ObjectManager').declareObjectPrivate()
+    ModuleSecurityInfo('OFS.ObjectManager').declarePublic('BeforeDeleteException')
+
     # allow logging
     ModuleSecurityInfo('logging').declarePublic('getLogger')
     from logging import Logger
     allow_class(Logger)
-
-    # Register kss extension to allow it used from fs skins
-    from Products.CMFCore.DirectoryView import registerFileExtension
-    from Products.CMFCore.FSFile import FSFile
-    registerFileExtension('kss', FSFile)
 
     # various small utils functions
     # added for unescaping view names in urls when finding selected action
@@ -42,9 +42,12 @@ def initialize(context):
     # For content_status_modify
     from Products.CMFCore.WorkflowCore import ObjectMoved, ObjectDeleted, \
                                               WorkflowException
-    ModuleSecurityInfo('Products.CMFCore.WorkflowCore').declarePublic('ObjectMoved')
-    ModuleSecurityInfo('Products.CMFCore.WorkflowCore').declarePublic('ObjectDeleted')
-    ModuleSecurityInfo('Products.CMFCore.WorkflowCore').declarePublic('WorkflowException')
+    ModuleSecurityInfo('Products.CMFCore.WorkflowCore') \
+        .declarePublic('ObjectMoved')
+    ModuleSecurityInfo('Products.CMFCore.WorkflowCore') \
+        .declarePublic('ObjectDeleted')
+    ModuleSecurityInfo('Products.CMFCore.WorkflowCore') \
+        .declarePublic('WorkflowException')
     allow_class(ObjectMoved)
     allow_class(ObjectDeleted)
     allow_class(WorkflowException)
@@ -55,6 +58,7 @@ def initialize(context):
     # Make Batch available at module level
     this_module.Batch = Batch
 
+    ModuleSecurityInfo('StringIO').declarePublic('StringIO')
     from StringIO import StringIO
     allow_class(StringIO)
 
@@ -68,7 +72,8 @@ def initialize(context):
     ModuleSecurityInfo('ZODB.POSException').declarePublic('ConflictError')
 
     # Make ZCTextIndex ParseError importable TTW
-    ModuleSecurityInfo('Products.ZCTextIndex.ParseTree').declarePublic('ParseError')
+    ModuleSecurityInfo('Products.ZCTextIndex.ParseTree') \
+        .declarePublic('ParseError')
 
     # Make DateTimeError importable TTW
     ModuleSecurityInfo('DateTime.interfaces').declarePublic('DateTimeError')
@@ -81,14 +86,13 @@ def initialize(context):
     # Make CopyError importable TTW
     ModuleSecurityInfo('OFS.CopySupport').declarePublic('CopyError')
 
-    # Make DiscussionNotAllowed importable TTW
-    ModuleSecurityInfo('Products.CMFDefault.DiscussionTool').declarePublic('DiscussionNotAllowed')
-
     # Make AllowSendto importable TTW
-    ModuleSecurityInfo('Products.CMFPlone.PloneTool').declarePublic('AllowSendto')
+    ModuleSecurityInfo('Products.CMFPlone.PloneTool') \
+        .declarePublic('AllowSendto')
 
     # Make ZCatalog's mergeResults importable TTW
-    ModuleSecurityInfo('Products.ZCatalog.Catalog').declarePublic('mergeResults')
+    ModuleSecurityInfo('Products.ZCatalog.Catalog') \
+        .declarePublic('mergeResults')
 
     # Make the navtree constructs available TTW
     allow_module('Products.CMFPlone.browser.navtree')
@@ -121,47 +125,31 @@ def initialize(context):
 
     # Plone tools
     import PloneTool
-    import FactoryTool
-    import InterfaceTool
     import MigrationTool
     import PloneControlPanel
     import WorkflowTool
     import URLTool
-    import MetadataTool
     import RegistrationTool
-    import SyndicationTool
     import PropertiesTool
     import ActionsTool
     import TypesTool
-    import UndoTool
     import CatalogTool
     import SkinsTool
-    import DiscussionTool
-    import CalendarTool
-    import ActionIconsTool
     import QuickInstallerTool
     import TranslationServiceTool
 
     tools = (PloneTool.PloneTool,
              WorkflowTool.WorkflowTool,
              CachingPolicyManager.CachingPolicyManager,
-             FactoryTool.FactoryTool,
              PropertiesTool.PropertiesTool,
              MigrationTool.MigrationTool,
-             InterfaceTool.InterfaceTool,
              PloneControlPanel.PloneControlPanel,
              RegistrationTool.RegistrationTool,
              URLTool.URLTool,
-             MetadataTool.MetadataTool,
              ActionsTool.ActionsTool,
              TypesTool.TypesTool,
-             UndoTool.UndoTool,
-             SyndicationTool.SyndicationTool,
              CatalogTool.CatalogTool,
              SkinsTool.SkinsTool,
-             DiscussionTool.DiscussionTool,
-             ActionIconsTool.ActionIconsTool,
-             CalendarTool.CalendarTool,
              QuickInstallerTool.QuickInstallerTool,
              TranslationServiceTool.TranslationServiceTool,
             )
@@ -192,17 +180,18 @@ def initialize(context):
 
     from plone.app.folder import nogopip
     context.registerClass(nogopip.GopipIndex,
-        permission = 'Add Pluggable Index',
-        constructors = (nogopip.manage_addGopipForm,
-                        nogopip.manage_addGopipIndex),
-        icon = 'index.gif',
-        visibility = None)
+        permission='Add Pluggable Index',
+        constructors=(nogopip.manage_addGopipForm,
+                      nogopip.manage_addGopipIndex),
+        icon='index.gif',
+        visibility=None)
 
 
 # Import PloneMessageFactory to create messages in the plone domain
 from zope.i18nmessageid import MessageFactory
 PloneMessageFactory = MessageFactory('plone')
 
-# Import PloneLocalesMessageFactory to create messages in the plonelocales domain
+# Import PloneLocalesMessageFactory to create messages in the
+# plonelocales domain
 from zope.i18nmessageid import MessageFactory
 PloneLocalesMessageFactory = MessageFactory('plonelocales')

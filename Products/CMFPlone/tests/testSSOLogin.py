@@ -1,27 +1,36 @@
-from Testing.testbrowser import Browser
-from Products.PloneTestCase import ptc
+from plone.testing.z2 import Browser
+from plone.app.testing import TEST_USER_ID
+from plone.app.testing import TEST_USER_NAME
+from plone.app.testing import TEST_USER_PASSWORD
+from plone.app.testing import TEST_USER_ROLES
+from Products.CMFPlone.tests.PloneTestCase import PloneTestCase
+from Products.CMFPlone.factory import addPloneSite
+import transaction
 
-ptc.setupPloneSite(id=ptc.portal_name)
-ptc.setupPloneSite(id='login_portal')
-ptc.setupPloneSite(id='another_portal')
 
-
-class SSOLoginTestCase(ptc.FunctionalTestCase):
+class SSOLoginTestCase(PloneTestCase):
 
     def afterSetUp(self):
-        ptc.FunctionalTestCase.afterSetUp(self)
+        PloneTestCase.afterSetUp(self)
 
-        self.browser = Browser()
-        self.browser.handleErrors = False # Don't get HTTP 500 pages
+        self.setRoles(['Manager'])
+        addPloneSite(self.app, 'login_portal', content_profile_id='Products.ATContentTypes:default')
+        addPloneSite(self.app, 'another_portal', content_profile_id='Products.ATContentTypes:default')
 
-        self.login_portal = self.app.login_portal # logins go here
-        self.another_portal = self.app.another_portal # another portal
+        self.browser = Browser(self.app)
+        self.browser.handleErrors = False  # Don't get HTTP 500 pages
+
+        self.login_portal = self.app.login_portal  # logins go here
+        self.another_portal = self.app.another_portal  # another portal
         # The extra portals do not get a member setup from the base class.
         # Add our user to the other portals to simulate an ldap environment.
         for portal in (self.login_portal, self.another_portal):
-            portal.acl_users.userFolderAddUser(
-                ptc.default_user, ptc.default_password, ['Member'], []
-                )
+            portal.acl_users.source_users.addUser(
+                TEST_USER_ID,
+                TEST_USER_NAME,
+                TEST_USER_PASSWORD)
+        for role in TEST_USER_ROLES:
+            portal.acl_users.portal_role_manager.doAssignRoleToPrincipal(TEST_USER_ID, role)
 
         # Configure the login portal to allow logins from our sites.
         self.login_portal.portal_properties.site_properties._updateProperty(
@@ -35,8 +44,10 @@ class SSOLoginTestCase(ptc.FunctionalTestCase):
         login_portal_url = self.login_portal.absolute_url()
         for portal in (self.portal, self.another_portal):
             site_properties = portal.portal_properties.site_properties
-            site_properties._updateProperty('external_login_url', login_portal_url + '/login')
-            site_properties._updateProperty('external_logout_url', login_portal_url + '/logout')
+            site_properties._updateProperty('external_login_url',
+                                            login_portal_url + '/login')
+            site_properties._updateProperty('external_logout_url',
+                                            login_portal_url + '/logout')
 
         # Configure all sites to use a shared secret and set cookies per path
         # (normally they would have different domains.)
@@ -46,7 +57,11 @@ class SSOLoginTestCase(ptc.FunctionalTestCase):
             session.path = portal.absolute_url_path()
 
         # Turn on self-registration
-        self.portal.manage_permission('Add portal member', roles=['Manager', 'Anonymous'], acquire=0)
+        self.portal.manage_permission('Add portal member',
+                                      roles=['Manager', 'Anonymous'],
+                                      acquire=0)
+
+        transaction.commit()
 
 
 class TestSSOLogin(SSOLoginTestCase):
@@ -55,19 +70,22 @@ class TestSSOLogin(SSOLoginTestCase):
         browser = self.browser
         browser.open(self.portal.absolute_url())
         browser.getLink('Log in').click()
-        browser.getControl(name='__ac_name').value = ptc.default_user
-        browser.getControl(name='__ac_password').value = ptc.default_password
+        browser.getControl(name='__ac_name').value = TEST_USER_NAME
+        browser.getControl(name='__ac_password').value = TEST_USER_PASSWORD
         browser.getControl(name='submit').click()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.login_portal.absolute_url_path())
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.login_portal.absolute_url_path())
         # Without javascript we must click through
         browser.getForm('external_login_form').submit()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.portal.absolute_url_path())
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.portal.absolute_url_path())
         # Test logging in from another_portal
         browser.open(self.another_portal.absolute_url())
         browser.getLink('Log in').click()
         # No need to enter password this time
         browser.getForm('external_login_form').submit()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.another_portal.absolute_url_path())
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.another_portal.absolute_url_path())
         # Now logout
         browser.open(self.portal.absolute_url())
         browser.getLink('Log out').click()
@@ -83,12 +101,12 @@ class TestSSOLogin(SSOLoginTestCase):
 
     def test_requireLogin(self):
         browser = self.browser
-        browser.handleErrors = True # So unauthorized renders a login form
+        browser.handleErrors = True  # So unauthorized renders a login form
         # Login to the central portal
         browser.open(self.login_portal.absolute_url())
         browser.getLink('Log in').click()
-        browser.getControl(name='__ac_name').value = ptc.default_user
-        browser.getControl(name='__ac_password').value = ptc.default_password
+        browser.getControl(name='__ac_name').value = TEST_USER_NAME
+        browser.getControl(name='__ac_password').value = TEST_USER_PASSWORD
         browser.getControl(name='submit').click()
         # Check we are logged in centrally
         browser.getLink('Log out')
@@ -99,7 +117,8 @@ class TestSSOLogin(SSOLoginTestCase):
         protected_url = self.folder.absolute_url() + '/folder_contents'
         browser.open(protected_url)
         # Without javascript we must click through
-        self.assertEqual(browser.getControl(name='came_from').value, protected_url)
+        self.assertEqual(browser.getControl(name='came_from').value,
+                         protected_url)
         browser.getForm('external_login_form').submit()
         self.assertEqual(browser.url, protected_url)
         browser.getLink('Log out')
@@ -113,6 +132,7 @@ class TestSSOLoginIframe(SSOLoginTestCase):
         for portal in (self.portal, self.another_portal):
             site_properties = portal.portal_properties.site_properties
             site_properties._updateProperty('external_login_iframe', True)
+        transaction.commit()
 
     def test_loginAndLogoutSSO(self):
         browser = self.browser
@@ -122,25 +142,29 @@ class TestSSOLoginIframe(SSOLoginTestCase):
         form = browser.getForm(name='login_form')
         form.submit()
         # We are now inside the iframe
-        self.failUnless(browser.url.startswith(self.login_portal.absolute_url()))
+        self.assertTrue(
+                browser.url.startswith(self.login_portal.absolute_url()))
         # The Link to get  a new password points back to self.portal
         link = browser.getLink('we can send you a new one')
-        self.failUnless(link.url.startswith(self.portal.absolute_url()))
+        self.assertTrue(link.url.startswith(self.portal.absolute_url()))
         self.assertEqual(link.attrs['target'], '_parent')
         # So does the registration form
         link = browser.getLink('registration form')
-        self.failUnless(link.url.startswith(self.portal.absolute_url()))
+        self.assertTrue(link.url.startswith(self.portal.absolute_url()))
         self.assertEqual(link.attrs['target'], '_parent')
         # Login
-        browser.getControl(name='__ac_name').value = ptc.default_user
-        browser.getControl(name='__ac_password').value = ptc.default_password
+        browser.getControl(name='__ac_name').value = TEST_USER_NAME
+        browser.getControl(name='__ac_password').value = TEST_USER_PASSWORD
         browser.getControl(name='submit').click()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.login_portal.absolute_url_path())
-        # The external_login_form has a target attribute too (but difficult to test for)
-        self.failUnless(browser.contents.find('target=') > 0)
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.login_portal.absolute_url_path())
+        # The external_login_form has a target attribute too (but difficult to
+        # test for)
+        self.assertTrue(browser.contents.find('target=') > 0)
         # Without javascript we must click through
         browser.getForm('external_login_form').submit()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.portal.absolute_url_path())
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.portal.absolute_url_path())
         # Now in another_portal
         browser.open(self.another_portal.absolute_url())
         browser.getLink('Log in').click()
@@ -148,9 +172,11 @@ class TestSSOLoginIframe(SSOLoginTestCase):
         form = browser.getForm(name='login_form')
         form.submit()
         # We are now inside the iframe
-        self.failUnless(browser.url.startswith(self.login_portal.absolute_url()))
+        self.assertTrue(
+                browser.url.startswith(self.login_portal.absolute_url()))
         browser.getForm('external_login_form').submit()
-        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'], self.another_portal.absolute_url_path())
+        self.assertEqual(self.browser.cookies.getinfo('__ac')['path'],
+                         self.another_portal.absolute_url_path())
         # Now logout
         browser.open(self.portal.absolute_url())
         browser.getLink('Log out').click()
@@ -161,7 +187,7 @@ class TestSSOLoginIframe(SSOLoginTestCase):
         form.submit()
         # Check the registration form does not have an incorrect came_from link
         link = browser.getLink('registration form')
-        self.failIf('came_from' in link.url)
+        self.assertFalse('came_from' in link.url)
         self.assertEqual(link.attrs['target'], '_parent')
         # Check we are logged out of the login_portal too
         browser.open(self.login_portal.absolute_url())
@@ -173,12 +199,12 @@ class TestSSOLoginIframe(SSOLoginTestCase):
 
     def test_requireLoginSSO(self):
         browser = self.browser
-        browser.handleErrors = True # So unauthorized renders a login form
+        browser.handleErrors = True  # So unauthorized renders a login form
         # Login to the central portal
         browser.open(self.login_portal.absolute_url())
         browser.getLink('Log in').click()
-        browser.getControl(name='__ac_name').value = ptc.default_user
-        browser.getControl(name='__ac_password').value = ptc.default_password
+        browser.getControl(name='__ac_name').value = TEST_USER_NAME
+        browser.getControl(name='__ac_password').value = TEST_USER_PASSWORD
         browser.getControl(name='submit').click()
         # Check we are logged in centrally
         browser.getLink('Log out')
@@ -190,18 +216,12 @@ class TestSSOLoginIframe(SSOLoginTestCase):
         browser.open(protected_url)
         # The test browser does not support iframes
         form = browser.getForm(name='login_form')
-        self.assertEqual(browser.getControl(name='came_from').value, protected_url)
+        self.assertEqual(browser.getControl(name='came_from').value,
+                         protected_url)
         form.submit()
         # Without javascript we must click through
-        self.assertEqual(browser.getControl(name='came_from').value, protected_url)
+        self.assertEqual(browser.getControl(name='came_from').value,
+                         protected_url)
         browser.getForm('external_login_form').submit()
         self.assertEqual(browser.url, protected_url)
         browser.getLink('Log out')
-
-
-def test_suite():
-    from unittest import TestSuite, makeSuite
-    suite = TestSuite()
-    suite.addTest(makeSuite(TestSSOLogin))
-    suite.addTest(makeSuite(TestSSOLoginIframe))
-    return suite

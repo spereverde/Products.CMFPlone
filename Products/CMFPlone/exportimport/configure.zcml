@@ -19,15 +19,7 @@
       title="Stylesheet registry"
       description="Import stylesheet registry"
       handler="Products.ResourceRegistries.exportimport.cssregistry.importCSSRegistry">
-    <depends name="toolset"/>
-    <depends name="componentregistry"/>
-  </genericsetup:importStep>
-
-  <genericsetup:importStep
-      name="kssregistry"
-      title="KSS registry"
-      description="Import KSS registry"
-      handler="Products.ResourceRegistries.exportimport.kssregistry.importKSSRegistry">
+    <depends name="skins"/>
     <depends name="toolset"/>
     <depends name="componentregistry"/>
   </genericsetup:importStep>
@@ -37,6 +29,7 @@
       title="Javascript registry"
       description="Import javascript registry"
       handler="Products.ResourceRegistries.exportimport.jsregistry.importJSRegistry">
+    <depends name="skins"/>
     <depends name="toolset"/>
     <depends name="componentregistry"/>
   </genericsetup:importStep>
@@ -50,29 +43,12 @@
   </genericsetup:importStep>
 
   <genericsetup:importStep
-      name="kss_mimetype"
-      title="KSS setup / mimetype"
-      description="KSS (Kinetic Style Sheet) setup. Register kss mimetype."
-      handler="plone.app.kss.exportimport.setup.setupMimetype">
-    <depends name="mimetypes-registry-various"/>
-  </genericsetup:importStep>
-
-  <genericsetup:importStep
       name="controlpanel"
       handler="Products.CMFPlone.exportimport.controlpanel.importControlPanel"
       title="Control Panel"
       description="Import Plone control panel actions.">
    <depends name="actions" />
    <depends name="componentregistry" />
-  </genericsetup:importStep>
-
-  <genericsetup:importStep
-      name="factorytool"
-      handler="Products.CMFPlone.exportimport.factorytool.importFactoryTool"
-      title="Portal Factory Tool"
-      description="Import type registration for the portal factory tool.">
-   <depends name="componentregistry" />
-   <depends name="typeinfo" />
   </genericsetup:importStep>
 
   <genericsetup:importStep
@@ -84,21 +60,18 @@
   </genericsetup:importStep>
 
   <genericsetup:importStep
-      name="plone-content"
-      handler="Products.CMFPlone.setuphandlers.importContent"
-      title="Plone Content Import"
-      description="Plone content import.">
-   <depends name="plone-final" />
-  </genericsetup:importStep>
-
-  <genericsetup:importStep
       name="plone-final"
       handler="Products.CMFPlone.setuphandlers.importFinalSteps"
       title="Final Plone Config"
       description="Final Plone configuration.">
-   <depends name="kss_mimetype" />
    <depends name="portlets" />
    <depends name="rolemap" />
+   <depends name="catalog" />
+   <depends name="cssregistry" />
+   <depends name="jsregistry" />
+   <depends name="viewlets" />
+   <depends name="controlpanel" />
+   <depends name="propertiestool" />
   </genericsetup:importStep>
 
   <genericsetup:importStep
@@ -146,20 +119,6 @@
       />
 
   <genericsetup:exportStep
-      name="kssregistry"
-      title="KSS registry"
-      description="Export stylesheet registry"
-      handler="Products.ResourceRegistries.exportimport.kssregistry.exportKSSRegistry"
-      />
-
-  <genericsetup:exportStep
-      name="factorytool"
-      title="Portal Factory Tool"
-      description="Export type registration for the portal factory tool."
-      handler="Products.CMFPlone.exportimport.factorytool.exportFactoryTool"
-      />
-
-  <genericsetup:exportStep
       name="jsregistry"
       title="Javascript registry"
       description="Export javascript registry"
@@ -186,13 +145,6 @@
       description="Export viewlet settings"
       handler="plone.app.viewletmanager.exportimport.storage.exportViewletSettingsStorage"
       />
-
-  <adapter
-     factory=".factorytool.PortalFactoryXMLAdapter"
-     provides="Products.GenericSetup.interfaces.IBody"
-     for="Products.CMFPlone.interfaces.IFactoryTool
-          Products.GenericSetup.interfaces.ISetupEnviron"
-     />
 
   <adapter
      factory=".propertiestool.PlonePropertiesToolXMLAdapter"

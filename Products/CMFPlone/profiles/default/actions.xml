@@ -9,10 +9,10 @@
   <object name="rss" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">RSS feed</property>
    <property name="description" i18n:translate=""></property>
-   <property name="url_expr">string:$object_url/RSS</property>
+   <property name="url_expr">object/@@syndication-util/rss_url</property>
    <property name="icon_expr">string:$portal_url/rss.png</property>
    <property
-      name="available_expr">python:portal.portal_syndication.isSyndicationAllowed(object)</property>
+      name="available_expr">object/@@syndication-util/context_enabled</property>
    <property name="permissions">
     <element value="View"/>
    </property>
@@ -90,18 +90,7 @@
     <element value="View"/>
    </property>
    <property name="visible">True</property>
-  </object>
-  <object name="plone_setup" meta_type="CMF Action" i18n:domain="plone">
-   <property name="title" i18n:translate="">Site Setup</property>
-   <property name="description" i18n:translate=""></property>
-   <property
-      name="url_expr">string:${portal_url}/@@overview-controlpanel</property>
-   <property name="icon_expr"></property>
-   <property name="available_expr"></property>
-   <property name="permissions">
-    <element value="Plone Site Setup: Overview"/>
-   </property>
-   <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
  </object>
  <object name="folder_buttons" meta_type="CMF Action Category">
@@ -137,6 +126,7 @@
     <element value="Add portal content"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
   <object name="paste" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Paste</property>
@@ -157,6 +147,7 @@
     <element value="Delete objects"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
   <object name="change_state" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Change State</property>
@@ -169,6 +160,7 @@
     <element value="View"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
  </object>
  <object name="object" meta_type="CMF Action Category">
@@ -184,14 +176,15 @@
     <element value="List folder contents"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
   <object name="syndication" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Syndication</property>
    <property name="description" i18n:translate=""></property>
-   <property name="url_expr">string:${folder_url}/synPropertiesForm</property>
+   <property name="url_expr">string:${object_url}/synPropertiesForm</property>
    <property name="icon_expr"></property>
    <property
-      name="available_expr">python:folder is object and portal.portal_syndication.isSiteSyndicationAllowed()</property>
+      name="available_expr">object/@@syndication-util/context_allowed</property>
    <property name="permissions">
     <element value="Manage properties"/>
    </property>
@@ -209,6 +202,7 @@
     <element value="Content rules: Manage rules"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
   <object name="local_roles" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Sharing</property>
@@ -220,6 +214,7 @@
     <element value="Sharing page: Delegate roles"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
  </object>
  <object name="object_buttons" meta_type="CMF Action Category">
@@ -269,6 +264,7 @@
     <element value="Delete objects"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
   <object name="rename" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Rename</property>
@@ -282,6 +278,7 @@
     <element value="Add portal content"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{}</property>
   </object>
  </object>
  <object name="portal_tabs" meta_type="CMF Action Category">
@@ -311,7 +308,7 @@
    <property name="permissions">
     <element value="View"/>
    </property>
-   <property name="visible">False</property>
+   <property name="visible">True</property>
   </object>
   <object name="login" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Log in</property>
@@ -323,6 +320,7 @@
     <element value="View"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{"prependContent": ".portalMessage"}</property>
   </object>
   <object name="join" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Register</property>
@@ -334,6 +332,7 @@
     <element value="Add portal member"/>
    </property>
    <property name="visible">True</property>
+   <property name="modal" type="text">{"prependContent": ".portalMessage"}</property>
   </object>
   <object name="undo" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Undo</property>
@@ -345,6 +344,18 @@
     <element value="List undoable changes"/>
    </property>
    <property name="visible">False</property>
+  </object>
+  <object name="plone_setup" meta_type="CMF Action" i18n:domain="plone">
+   <property name="title" i18n:translate="">Site Setup</property>
+   <property name="description" i18n:translate=""></property>
+   <property
+      name="url_expr">string:${portal_url}/@@overview-controlpanel</property>
+   <property name="icon_expr"></property>
+   <property name="available_expr"></property>
+   <property name="permissions">
+    <element value="Plone Site Setup: Overview"/>
+   </property>
+   <property name="visible">True</property>
   </object>
   <object name="logout" meta_type="CMF Action" i18n:domain="plone">
    <property name="title" i18n:translate="">Log out</property>

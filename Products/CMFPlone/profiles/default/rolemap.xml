@@ -31,52 +31,7 @@
       <role name="Owner"/>
       <role name="Contributor"/>
     </permission>
-    <permission name="Add portal events" acquire="True">
-      <role name="Site Administrator"/>
-    </permission>
     <permission name="Add portal folders" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add Document" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add Event" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add File" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add Folder" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add Image" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add Link" acquire="True">
-      <role name="Manager"/>
-      <role name="Site Administrator"/>
-      <role name="Owner"/>
-      <role name="Contributor"/>
-    </permission>
-    <permission name="ATContentTypes: Add News Item" acquire="True">
       <role name="Manager"/>
       <role name="Site Administrator"/>
       <role name="Owner"/>
@@ -89,9 +44,6 @@
       <role name="Member"/>
     </permission>
     <permission name="Change local roles" acquire="True">
-      <role name="Site Administrator"/>
-    </permission>
-    <permission name="Change portal events" acquire="True">
       <role name="Site Administrator"/>
     </permission>
     <permission name="Copy or Move" acquire="True">

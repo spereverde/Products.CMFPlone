@@ -48,7 +48,9 @@ class Overview(BrowserView):
         result = []
         secman = getSecurityManager()
         for obj in root.values():
-            if IPloneSiteRoot.providedBy(obj):
+            if obj.meta_type is 'Folder':
+                result = result + self.sites(obj)
+            elif IPloneSiteRoot.providedBy(obj):
                 if secman.checkPermission(View, obj):
                     result.append(obj)
             elif obj.getId() in getattr(root, '_mount_points', {}):
@@ -109,9 +111,11 @@ class FrontPage(BrowserView):
 class AddPloneSite(BrowserView):
 
     default_extension_profiles = (
+        'plone.app.registry:default',
         'plonetheme.classic:default',
-        'plonetheme.sunburst:default',
-        )
+        'plone.app.theming:default',
+        'plonetheme.barceloneta:default',
+    )
 
     def profiles(self):
         base_profiles = []
@@ -123,9 +127,7 @@ class AddPloneSite(BrowserView):
             'kupu:default',
             'plonetheme.classic:uninstall',
             'Products.CMFPlacefulWorkflow:CMFPlacefulWorkflow',
-            'plone.app.registry:default',
             'plone.app.z3cform:default',
-            'plone.app.collection:default',
         ]
         utils = getAllUtilitiesRegisteredFor(INonInstallable)
         for util in utils:
@@ -148,13 +150,14 @@ class AddPloneSite(BrowserView):
 
         for info in profile_registry.listProfileInfo():
             if info.get('type') == BASE and \
-               info.get('for') in (IPloneSiteRoot, None):
+               info.get('for') in (IPloneSiteRoot, None) and \
+               info.get('id') != u'Products.kupu:default':
                 base_profiles.append(info)
 
         return dict(
-            base = tuple(base_profiles),
-            default = _DEFAULT_PROFILE,
-            extensions = tuple(extension_profiles),
+            base=tuple(base_profiles),
+            default=_DEFAULT_PROFILE,
+            extensions=tuple(extension_profiles),
         )
 
     def browser_language(self):

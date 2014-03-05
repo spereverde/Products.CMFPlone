@@ -10,10 +10,10 @@ from Products.CMFPlone.Portal import PloneSite
 
 _TOOL_ID = 'portal_setup'
 _DEFAULT_PROFILE = 'Products.CMFPlone:plone'
-_CONTENT_PROFILE = 'Products.CMFPlone:plone-content'
+_CONTENT_PROFILE = 'plone.app.contenttypes:plone-content'
 
 # A little hint for PloneTestCase
-_IMREALLYPLONE4 = True
+_IMREALLYPLONE5 = True
 
 
 class HiddenProfiles(object):
@@ -35,27 +35,30 @@ class HiddenProfiles(object):
                 u'Products.PortalTransforms:PortalTransforms',
                 u'Products.PloneLanguageTool:PloneLanguageTool',
                 u'Products.PlonePAS:PlonePAS',
-                u'archetypes.referencebrowserwidget:default',
                 u'borg.localrole:default',
-                u'Products.TinyMCE:TinyMCE',
-                u'Products.TinyMCE:upgrade_10_to_11',
-                u'Products.TinyMCE:uninstall',
                 u'plone.browserlayer:default',
                 u'plone.keyring:default',
                 u'plone.outputfilters:default',
                 u'plone.portlet.static:default',
                 u'plone.portlet.collection:default',
                 u'plone.protect:default',
-                u'plonetheme.sunburst:uninstall',
                 u'plone.app.blob:default',
                 u'plone.app.blob:file-replacement',
                 u'plone.app.blob:image-replacement',
                 u'plone.app.blob:sample-type',
+                u'plone.app.collection:default',
+                u'plone.app.contenttypes:default',
+                u'plone.app.dexterity:default',
                 u'plone.app.discussion:default',
+                u'plone.app.event.at:default',
+                u'plone.app.event.dx:default',
                 u'plone.app.folder:default',
                 u'plone.app.imaging:default',
                 u'plone.app.jquery:initial-upgrade',
-                u'plone.app.search:default',                
+                u'plone.app.registry:default',
+                u'plone.app.search:default',
+                u'plone.formwidget.recurrence:default',
+                u'plone.resource:default',
                 ]
 
 
@@ -69,8 +72,9 @@ def zmi_constructor(context):
 def addPloneSite(context, site_id, title='Plone site', description='',
                  create_userfolder=True, email_from_address='',
                  email_from_name='', validate_email=True,
-                 profile_id=_DEFAULT_PROFILE, snapshot=False,
-                 extension_ids=(), setup_content=True, default_language='en'):
+                 profile_id=_DEFAULT_PROFILE, content_profile_id=_CONTENT_PROFILE,
+                 snapshot=False, extension_ids=(), setup_content=True,
+                 default_language='en'):
     """Add a PloneSite to the context."""
     context._setObject(site_id, PloneSite(site_id))
     site = context._getOb(site_id)
@@ -85,7 +89,8 @@ def addPloneSite(context, site_id, title='Plone site', description='',
     setup_tool.setBaselineContext('profile-%s' % profile_id)
     setup_tool.runAllImportStepsFromProfile('profile-%s' % profile_id)
     if setup_content:
-        setup_tool.runAllImportStepsFromProfile('profile-%s' % _CONTENT_PROFILE)
+        setup_tool.runAllImportStepsFromProfile(
+            'profile-%s' % content_profile_id)
 
     props = dict(
         title=title,
